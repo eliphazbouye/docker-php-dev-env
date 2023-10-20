@@ -1,0 +1,60 @@
+version: '3.9'
+services:
+    # Application
+    app:
+        build:
+            context: .
+            dockerfile: app.dockerfile
+        working_dir: /var/www
+        volumes:
+            - ./app/:/var/www
+        depends_on:
+            - "database"
+
+    # Web Server
+    web:
+        build:
+            context: .
+            dockerfile: web.dockerfile
+        working_dir: /var/www
+        volumes:
+            - ./app/:/var/www
+        ports:
+            - 80:80
+        depends_on:
+            - "app"
+
+    # Database
+    database:
+        image: mariadb:10.11.5
+        volumes:
+            - ./database/dbdata:/var/lib/mysql
+        environment:
+            MYSQL_DATABASE: ${DB_DATABASE}
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+        ports:
+            - 33061:3306
+
+    # Mailing Service
+    mailhog:
+        image: mailhog/mailhog:latest
+        logging:
+            driver: 'none'
+        ports:
+            - 1025:1025
+            - 8025:8025
+
+    # Database management
+    pma:
+        image: phpmyadmin:5.2
+        environment:
+            - PMA_ARBITRARY=1
+            - PMA_HOST=${DB_HOST}
+            - PMA_USER=${DB_USERNAME}
+            - PMA_PASSWORD=${DB_PASSWORD}
+            - PMA_PORT=${DB_PORT}
+        depends_on:
+            - database
+        ports:
+            - 8888:80
+
