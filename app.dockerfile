@@ -2,6 +2,8 @@ FROM php:8.2-fpm
 
 ARG WITH_XDEBUG=true
 
+WORKDIR /var/www
+
 RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
@@ -17,3 +19,17 @@ RUN apt-get update && apt-get install -y \
     if [ $WITH_XDEBUG = "true" ] ; then \
        pecl install xdebug; \
     fi;
+
+# Install composer (php package manager)
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+
+# Add user for laravel application
+RUN groupadd -g 1000 www
+RUN useradd -u 1000 -ms /bin/bash -g www www
+
+# Copy existing application directory permissions
+COPY --chown=www:www . /var/www
+
+# Change current user to www
+USER www
